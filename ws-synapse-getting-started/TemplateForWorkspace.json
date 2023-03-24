@@ -1395,7 +1395,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "-- This is auto-generated code\n-- Adding some changes to commit\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Customer/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"query": "-- This is auto-generated code\n-- Adding some changes to commit\n-- And yet another change\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Customer/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
 					"metadata": {
 						"language": "sql"
 					},
