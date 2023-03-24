@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "ws-synapse-getting-started"
+		},
+		"AzureDataLakeStorage_accountKey": {
+			"value": ""
+		},
+		"AzureSqlDatabaseGS_connectionString": {
+			"value": ""
+		},
+		"serverlessSQLPool02_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ws-synapse-getting-started-ondemand.sql.azuresynapse.net;Initial Catalog=customers"
+		},
+		"serverlessSQLpool_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ws-synapse-getting-started-ondemand.sql.azuresynapse.net;Initial Catalog=customers"
+		},
+		"ws-synapse-getting-started-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:ws-synapse-getting-started.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"value": "https://accadlssynapsegs.dfs.core.windows.net/"
+		},
+		"ws-synapse-getting-started-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://accadlssynapsegs.dfs.core.windows.net"
+		}
+	}
+}
