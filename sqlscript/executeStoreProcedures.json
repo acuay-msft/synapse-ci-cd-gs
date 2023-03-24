@@ -1,0 +1,17 @@
+{
+	"name": "executeStoreProcedures",
+	"properties": {
+		"content": {
+			"query": "USE customers;\n\nEXEC createCustomerAddresses;\n\n\nEXEC dropCustomerAddresses;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

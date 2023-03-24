@@ -1,0 +1,166 @@
+{
+	"name": "SalesLTCustomers",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Customer"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CustomerAddresses"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Address"
+				}
+			],
+			"sinks": [
+				{
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filterCustomersCurrent"
+				},
+				{
+					"name": "joinCustomerWithCustomerAddresses"
+				},
+				{
+					"name": "filterAddressCurrent"
+				},
+				{
+					"name": "joinCustomersAddressWithAddressCurrent"
+				},
+				{
+					"name": "selectOnlyUniqueColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as integer,",
+				"          NameStyle as boolean,",
+				"          Title as string,",
+				"          FirstName as string,",
+				"          MiddleName as string,",
+				"          LastName as string,",
+				"          Suffix as string,",
+				"          CompanyName as string,",
+				"          SalesPerson as string,",
+				"          EmailAddress as string,",
+				"          Phone as string,",
+				"          PasswordHash as string,",
+				"          PasswordSalt as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as timestamp,",
+				"          current as boolean,",
+				"          effectiveDate as date,",
+				"          endDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'fsadlssynapsegs',",
+				"     folderPath: 'silver/demodatabase/SalesLT.Customer') ~> Customer",
+				"source(output(",
+				"          CustomerID as integer,",
+				"          AddressID as integer,",
+				"          AddressType as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as timestamp,",
+				"          current as boolean,",
+				"          effectiveDate as date,",
+				"          endDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'fsadlssynapsegs',",
+				"     folderPath: 'silver/demodatabase/SalesLT.CustomerAddress') ~> CustomerAddresses",
+				"source(output(",
+				"          AddressID as integer,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          City as string,",
+				"          StateProvince as string,",
+				"          CountryRegion as string,",
+				"          PostalCode as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as timestamp,",
+				"          current as boolean,",
+				"          effectiveDate as date,",
+				"          endDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'fsadlssynapsegs',",
+				"     folderPath: 'silver/demodatabase/SalesLT.Address') ~> Address",
+				"Customer filter(current) ~> filterCustomersCurrent",
+				"filterCustomersCurrent, CustomerAddresses join(Customer@CustomerID == CustomerAddresses@CustomerID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinCustomerWithCustomerAddresses",
+				"Address filter(current) ~> filterAddressCurrent",
+				"joinCustomerWithCustomerAddresses, filterAddressCurrent join(CustomerAddresses@AddressID == Address@AddressID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinCustomersAddressWithAddressCurrent",
+				"joinCustomersAddressWithAddressCurrent select(mapColumn(",
+				"          CustomerID = Customer@CustomerID,",
+				"          NameStyle,",
+				"          Title,",
+				"          FirstName,",
+				"          MiddleName,",
+				"          LastName,",
+				"          Suffix,",
+				"          CompanyName,",
+				"          SalesPerson,",
+				"          EmailAddress,",
+				"          Phone,",
+				"          PasswordHash,",
+				"          PasswordSalt,",
+				"          rowguid = Customer@rowguid,",
+				"          ModifiedDate = Customer@ModifiedDate,",
+				"          current = Customer@current,",
+				"          effectiveDate = Customer@effectiveDate,",
+				"          endDate = Customer@endDate,",
+				"          AddressID = CustomerAddresses@AddressID,",
+				"          AddressType,",
+				"          AddressLine1,",
+				"          AddressLine2,",
+				"          City,",
+				"          StateProvince,",
+				"          CountryRegion,",
+				"          PostalCode",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectOnlyUniqueColumns",
+				"selectOnlyUniqueColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     store: 'synapse',",
+				"     databaseType: 'spark',",
+				"     format: 'table',",
+				"     database: 'default',",
+				"     tableName: 'CustomerAddresses02') ~> sink1"
+			]
+		}
+	}
+}

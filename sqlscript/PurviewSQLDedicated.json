@@ -1,0 +1,17 @@
+{
+	"name": "PurviewSQLDedicated",
+	"properties": {
+		"content": {
+			"query": "CREATE USER [acc-purview-synapse-gs] FROM EXTERNAL PROVIDER\nGO\n\nEXEC sp_addrolemember 'db_datareader', [acc-purview-synapse-gs]\nGO\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dedicated01",
+				"poolName": "dedicated01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

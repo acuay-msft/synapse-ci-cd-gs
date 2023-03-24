@@ -1,0 +1,17 @@
+{
+	"name": "dpETLCustomer",
+	"properties": {
+		"content": {
+			"query": "-- Attach external table, which we created on the Serverless pool\n\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'parquetfile')\n    CREATE EXTERNAL FILE FORMAT [parquetfile]\n    WITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'AzureDataLakeStore')\n    CREATE EXTERNAL DATA SOURCE [AzureDataLakeStore]\n    WITH (\n        LOCATION = 'abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net',\n        TYPE = HADOOP\n    )\nGO\n\nIF EXISTS (SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID('dbo.ExternalCustomerAddresses'))\n    DROP EXTERNAL TABLE ExternalCustomerAddresses\nGO\n\nCREATE EXTERNAL TABLE ExternalCustomerAddresses (\n    [CustomerId]    INT             NOT NULL,\n    [Title]         VARCHAR(50)     NULL,\n    [FirstName]     VARCHAR(1024)   NULL,\n    [MiddleName]    VARCHAR(1024)   NULL,\n    [LastName]      VARCHAR(1024)   NULL,\n    [Suffix]        VARCHAR(30)     NULL,\n    [AddressType]   VARCHAR(50)     NULL,\n    [AddressLine1]  VARCHAR(1024)   NULL,\n    [AddressLine2]  VARCHAR(1024)   NULL,\n    [City]          VARCHAR(1024)   NULL,\n    [StateProvince] VARCHAR(1024)     NULL,\n    [CountryRegion] VARCHAR(1024)     NULL,\n    [PostalCode]    VARCHAR(50)     NULL\n) \nWITH (\n    LOCATION = 'gold/demodatabase/customeradresses',\n    DATA_SOURCE = [AzureDataLakeStore],\n    FILE_FORMAT = [parquetfile]\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dedicated01",
+				"poolName": "dedicated01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

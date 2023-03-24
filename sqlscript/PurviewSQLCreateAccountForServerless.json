@@ -1,0 +1,17 @@
+{
+	"name": "PurviewSQLCreateAccountForServerless",
+	"properties": {
+		"content": {
+			"query": "CREATE LOGIN \"acc-purview-synapse-gs\" FROM EXTERNAL PROVIDER;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

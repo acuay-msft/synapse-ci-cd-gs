@@ -1,0 +1,17 @@
+{
+	"name": "dpExternalTableFromSA",
+	"properties": {
+		"content": {
+			"query": "-- Attach an external table, which we created on the Storage account\n\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseParquetFormat')\n    CREATE EXTERNAL FILE FORMAT [SynapseParquetFormat]\n    WITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'fsadlssynapsegs_accadlssynapsegs_dfs_core_windows_net')\n    CREATE EXTERNAL DATA SOURCE [fsadlssynapsegs_accadlssynapsegs_dfs_core_windows_net]\n    WITH (\n        LOCATION = 'abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net'\n    )\nGO\n\nIF EXISTS (SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID('dbo.ExternalCustomerAddressesSA'))\n    DROP EXTERNAL TABLE ExternalCustomerAddressesSA\nGO\n\nCREATE EXTERNAL TABLE ExternalCustomerAddressesSA (\n    [CustomerId]    int,\n    [Title]         nvarchar(4000),\n    [FirstName]     nvarchar(4000),\n    [MiddleName]    nvarchar(4000),\n    [LastName]      nvarchar(4000),\n    [Suffix]        nvarchar(4000),\n    [AddressType]   nvarchar(4000),\n    [AddressLine1]  nvarchar(4000),\n    [AddressLine2]  nvarchar(4000),\n    [City]          nvarchar(4000),\n    [StateProvince] nvarchar(4000),\n    [CountryRegion] nvarchar(4000),\n    [PostalCode]    nvarchar(4000)\n) \nWITH (\n    LOCATION = 'gold/demodatabase/customeradresses',\n    DATA_SOURCE = [fsadlssynapsegs_accadlssynapsegs_dfs_core_windows_net],\n    FILE_FORMAT = [SynapseParquetFormat]\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dedicated01",
+				"poolName": "dedicated01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

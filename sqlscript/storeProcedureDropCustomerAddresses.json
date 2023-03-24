@@ -1,0 +1,17 @@
+{
+	"name": "storeProcedureDropCustomerAddresses",
+	"properties": {
+		"content": {
+			"query": "USE customers;\n\nCREATE PROC dropCustomerAddresses\nAS \nBEGIN\n    BEGIN TRY\n        IF EXISTS (SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID('dbo.CustomerAddresses'))\n            DROP EXTERNAL TABLE dbo.CustomerAddresses\n    END TRY\n    BEGIN CATCH\n        PRINT 'Error creating external table'\n    END CATCH\nEND\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

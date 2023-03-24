@@ -1,0 +1,191 @@
+{
+	"name": "kustoSparkGenerateData",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkpool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "d0e52280-6698-4827-ba32-e911eec72c35"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/3ecde8ef-af2a-4fd8-95a2-cb3d3eb6a952/resourceGroups/rg-synapse-getting-started/providers/Microsoft.Synapse/workspaces/ws-synapse-getting-started/bigDataPools/sparkpool",
+				"name": "sparkpool",
+				"type": "Spark",
+				"endpoint": "https://ws-synapse-getting-started.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkpool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark import SparkContext\n",
+					"from pyspark.sql import SparkSession\n",
+					"from datetime import datetime, timedelta\n",
+					"\n",
+					"import pandas as pd\n",
+					"\n",
+					"from pandas.tseries.offsets import BDay\n",
+					"import pyspark.sql.functions as F\n",
+					"from pyspark.sql.functions import col, coalesce, lit\n",
+					"from pyspark.sql.types import DoubleType\n",
+					"\n",
+					"import random\n",
+					"\n",
+					"daterange=pd.date_range(\"1900-01-01\", \"2150-01-01\", freq='D')\n",
+					"bdaterange=pd.date_range(\"1900-01-01\", \"2150-01-01\", freq='B') \n",
+					"bmdaterange=pd.date_range(\"1900-01-01\", \"2150-01-01\", freq='BM')\n",
+					"\n",
+					"daily = pd.DataFrame(index=daterange,columns=['serial'])\n",
+					"bdaily = pd.DataFrame(index=bdaterange,columns=['wserial'])\n",
+					"bme = pd.DataFrame(index=bmdaterange,columns=['bmeserial'])\n",
+					"\n",
+					"daily['serial'] = range(2, 2+len(daily.index))\n",
+					"bdaily['wserial'] = range(1, 1 + len(bdaily.index))\n",
+					"bme['bmeserial'] = True\n",
+					"\n",
+					"bdaily2 = bdaily.reset_index()\n",
+					"daily2 = daily.reset_index()\n",
+					"bme2 = bme.reset_index()\n",
+					"\n",
+					"bdaily_spark = spark.createDataFrame(bdaily2)\n",
+					"daily_spark = spark.createDataFrame(daily2)\n",
+					"bme_spark = spark.createDataFrame(bme2)\n",
+					"\n",
+					"alldates = (\n",
+					"daily_spark\n",
+					".join(bdaily_spark, on=\"index\", how='left')\n",
+					".join(bme_spark, on=\"index\", how='left')\n",
+					".withColumn('Date', col(\"index\").cast('date'))\n",
+					".select('Date', 'Serial', 'WSerial', coalesce(col('bmeserial'), lit(False)).alias('MonthEnd'))\n",
+					".withColumn(\"serial\", col(\"serial\").cast(\"int\"))\n",
+					".withColumn(\"wserial\", col(\"wserial\").cast(\"int\"))\n",
+					").cache()\n",
+					"\n",
+					"dates = (\n",
+					"alldates\n",
+					".where(\"date<='2021-11-05'\")\n",
+					".orderBy(col(\"date\").desc())\n",
+					".limit(261*5)\n",
+					".select(\"date\").cache()\n",
+					")\n",
+					"\n",
+					"secids = ( spark.createDataFrame(\n",
+					"    [[x] for x in range(10000)],\n",
+					"    [\"secid\"]\n",
+					")\n",
+					".withColumn(\"secid\", col(\"secid\")\n",
+					".cast(\"int\"))\n",
+					".cache()\n",
+					")\n",
+					"\n",
+					"dataitems = ( spark.createDataFrame(\n",
+					"    [[x] for x in range(100)],\n",
+					"    [\"varid\"]\n",
+					")\n",
+					".withColumn(\"varid\", col(\"varid\")\n",
+					".cast(\"int\"))\n",
+					".cache()\n",
+					")\n",
+					"\n",
+					"def getRand():\n",
+					"    return random.uniform(-1, 1)\n",
+					"\n",
+					"udfgetRand = F.udf(getRand, DoubleType())\n",
+					"vardata = secids.crossJoin(dates).crossJoin(dataitems).withColumn(\"value\", udfgetRand()).cache()\n",
+					"\n",
+					"vardata.count()\n",
+					"\n",
+					""
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\n",
+					"spark.sql(\"CREATE DATABASE IF NOT EXISTS random\")\n",
+					"vardata.write.mode(\"overwrite\").saveAsTable(\"random.vardata\")"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"vardata.write \\\n",
+					"    .format(\"com.microsoft.kusto.spark.synapse.datasource\") \\\n",
+					"    .option(\"spark.synapse.linkedService\", \"kustopool001\") \\\n",
+					"    .option(\"kustoCluster\", \"https://kustopool001.ws-synapse-getting-started.kusto.azuresynapse.net\") \\\n",
+					"    .option(\"kustoDatabase\", \"imkustodb\") \\\n",
+					"    .option(\"kustoTable\", \"vardata\") \\\n",
+					"    .option(\"tableCreateOptions\",\"CreateIfNotExist\") \\\n",
+					"    .mode(\"Append\") \\\n",
+					"    .save()"
+				],
+				"execution_count": 7
+			}
+		]
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "dpETLScript",
+	"properties": {
+		"content": {
+			"query": "-- This will insert the data from the external table in the customer addresses table, that belongs to the pool\nINSERT INTO CustomerAddresses\nSELECT \n    *\nFROM ExternalCustomerAddresses",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dedicated01",
+				"poolName": "dedicated01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"name": "KustoQueries",
+	"properties": {
+		"content": {
+			"query": "# Kusto Queries\n\n//Example query A: given one date, show all data restricted to that date\nvardata\n| where ['date']  == '2021-11-05T00:00:00.0000000'\n\n//Example query B: given one secid, show all data restricted to that secid\nvardata\n| where secid == '5'\n\n//Example query C: given one date and one varid, show all data restricted to that date and varid\nvardata\n| where  ['date'] == '2021-11-05T00:00:00.0000000' and varid == 13\n\n//Example query D: given one secid and one varid, show all data restricted to that secid and varid\nvardata\n| where  secid == '2048' and varid == 85\n\n//Example query E: same as A, but pivoted. This means that each varid becomes one column and the rows have only secid as key\nvardata\n| where ['date'] == '2021-01-05T00:00:00.0000000'\n| project secid, varid\n| evaluate pivot(varid)\n\n//Example query F: same as B, but pivoted. This means that each varid becomes one column and the rows have only date as key\nvardata\n| where secid == '2048'\n| project ['date'],varid\n| evaluate pivot(varid)",
+			"metadata": {
+				"language": "kql"
+			},
+			"currentConnection": {
+				"poolName": "kustopool001",
+				"databaseName": "imkustodb"
+			}
+		},
+		"type": "KqlQuery"
+	}
+}

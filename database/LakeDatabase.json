@@ -1,0 +1,25 @@
+{
+	"name": "LakeDatabase",
+	"properties": {
+		"Name": "LakeDatabase",
+		"EntityType": "DATABASE",
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"Properties": {
+			"IsSyMSCDMDatabase": true
+		},
+		"Source": {
+			"Provider": "ADLS",
+			"Location": "abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net/synapse/workspaces",
+			"Properties": {
+				"FormatType": "parquet",
+				"LinkedServiceName": "AzureDataLakeStorage"
+			}
+		},
+		"PublishStatus": "PUBLISHED",
+		"ObjectVersion": 1,
+		"ObjectId": "b34a79d5-c22e-48ac-9304-73daa53e96e1"
+	},
+	"type": "DATABASE"
+}

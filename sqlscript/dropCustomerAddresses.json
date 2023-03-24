@@ -1,0 +1,17 @@
+{
+	"name": "dropCustomerAddresses",
+	"properties": {
+		"content": {
+			"query": "USE customers;\n\nIF EXISTS (SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID('dbo.CustomerAddresses'))\n    DROP EXTERNAL TABLE dbo.CustomerAddresses",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

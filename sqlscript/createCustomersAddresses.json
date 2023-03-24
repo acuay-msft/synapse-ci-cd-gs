@@ -1,0 +1,17 @@
+{
+	"name": "createCustomersAddresses",
+	"properties": {
+		"content": {
+			"query": "CREATE DATABASE customers;\n\nUSE customers;\n\n-- Create parquet format\nIF NOT EXISTS (SELECT COUNT(*) FROM sys.external_file_formats WHERE name = 'parquetfile')\n    CREATE EXTERNAL FILE FORMAT parquetfile WITH (FORMAT_TYPE = PARQUET, DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec')\n\n-- Create external AzureDataLakeStore\nIF NOT EXISTS (SELECT COUNT(*) FROM sys.external_data_sources WHERE name = 'AzureDataLakeStore')\n    CREATE EXTERNAL DATA SOURCE AzureDataLakeStore WITH (LOCATION = 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/')\n\n\n-- Create external table CustomerAddresses\nCREATE EXTERNAL TABLE CustomerAddresses\nWITH\n(\n    LOCATION = '/gold/demodatabase/customeradresses',\n    DATA_SOURCE = AzureDataLakeStore,\n    FILE_FORMAT = parquetfile\n)\nAS\nSELECT \n    customer.CustomerId,\n    Title,\n    FirstName,\n    MiddleName,\n    LastName,\n    Suffix,\n    AddressType,\n    AddressLine1,\n    AddressLine2,\n    City,\n    StateProvince,\n    CountryRegion,\n    PostalCode\nFROM (SELECT\n    *\nFROM \n    OPENROWSET(\n        BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Customer/',\n        FORMAT = 'DELTA'\n    ) AS [customer] WHERE [current] = 'True') AS customer\nJOIN\n(SELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.CustomerAddress/',\n        FORMAT = 'DELTA'\n    ) AS [CustomerAddress] WHERE [current] = 'True') AS CustomerAddress \nON (customer.CustomerID = CustomerAddress.CustomerID)\nJOIN \n(SELECT \n    *\nFROM\n    OPENROWSET (\n        BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Address/',\n        FORMAT = 'DELTA'\n    ) AS [Address] WHERE [current] = 'True') AS Address\nON (CustomerAddress.AddressID = Address.AddressID)\nORDER BY customer.CustomerId\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

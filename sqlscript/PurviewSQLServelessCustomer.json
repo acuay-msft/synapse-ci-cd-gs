@@ -1,0 +1,17 @@
+{
+	"name": "PurviewSQLServelessCustomer",
+	"properties": {
+		"content": {
+			"query": "CREATE USER [acc-purview-synapse-gs] FOR LOGIN [acc-purview-synapse-gs];\nALTER ROLE db_datareader ADD MEMBER [acc-purview-synapse-gs];",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

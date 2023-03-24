@@ -1,0 +1,17 @@
+{
+	"name": "storeProcedureCreateCustomerAddresses",
+	"properties": {
+		"content": {
+			"query": "USE customers;\n\nCREATE PROC createCustomerAddresses\nAS \nBEGIN\n    BEGIN TRY\n        -- Create parquet format\n        IF NOT EXISTS (SELECT COUNT(*) FROM sys.external_file_formats WHERE name = 'parquetfile')\n            CREATE EXTERNAL FILE FORMAT parquetfile WITH (FORMAT_TYPE = PARQUET, DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec')\n\n        -- Create external AzureDataLakeStore\n        IF NOT EXISTS (SELECT COUNT(*) FROM sys.external_data_sources WHERE name = 'AzureDataLakeStore')\n            CREATE EXTERNAL DATA SOURCE AzureDataLakeStore WITH (LOCATION = 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/')\n\n\n        -- Create external table CustomerAddresses\n        CREATE EXTERNAL TABLE CustomerAddresses\n        WITH\n        (\n            LOCATION = '/gold/demodatabase/customeradresses',\n            DATA_SOURCE = AzureDataLakeStore,\n            FILE_FORMAT = parquetfile\n        )\n        AS\n        SELECT \n            customer.CustomerId,\n            Title,\n            FirstName,\n            MiddleName,\n            LastName,\n            Suffix,\n            AddressType,\n            AddressLine1,\n            AddressLine2,\n            City,\n            StateProvince,\n            CountryRegion,\n            PostalCode\n        FROM (SELECT\n            *\n        FROM \n            OPENROWSET(\n                BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Customer/',\n                FORMAT = 'DELTA'\n            ) AS [customer] WHERE [current] = 'True') AS customer\n        JOIN\n        (SELECT\n            *\n        FROM\n            OPENROWSET(\n                BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.CustomerAddress/',\n                FORMAT = 'DELTA'\n            ) AS [CustomerAddress] WHERE [current] = 'True') AS CustomerAddress \n        ON (customer.CustomerID = CustomerAddress.CustomerID)\n        JOIN \n        (SELECT \n            *\n        FROM\n            OPENROWSET (\n                BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Address/',\n                FORMAT = 'DELTA'\n            ) AS [Address] WHERE [current] = 'True') AS Address\n        ON (CustomerAddress.AddressID = Address.AddressID)\n        ORDER BY customer.CustomerId\n    END TRY\n    BEGIN CATCH\n        PRINT 'Error creating external table'\n    END CATCH\nEND\nGO\n\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

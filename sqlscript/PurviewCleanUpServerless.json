@@ -1,0 +1,17 @@
+{
+	"name": "PurviewCleanUpServerless",
+	"properties": {
+		"content": {
+			"query": "-- Rolling back the changes created by the previous Purview scripts in the serverless pool\nUSE customers;\nALTER ROLE db_datareader DROP MEMBER [acc-purview-synapse-gs];\nDROP USER [acc-purview-synapse-gs];\n\nUSE master;\nDROP LOGIN \"acc-purview-synapse-gs\";",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

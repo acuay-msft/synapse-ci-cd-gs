@@ -1,0 +1,17 @@
+{
+	"name": "SQL Delta Query",
+	"properties": {
+		"content": {
+			"query": "-- This is auto-generated code\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://accadlssynapsegs.dfs.core.windows.net/fsadlssynapsegs/silver/demodatabase/SalesLT.Customer/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}

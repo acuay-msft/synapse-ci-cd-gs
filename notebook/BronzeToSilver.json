@@ -1,0 +1,260 @@
+{
+	"name": "BronzeToSilver",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkpool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "5c483d8d-3d76-4b58-a512-323e7a14bec9"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/3ecde8ef-af2a-4fd8-95a2-cb3d3eb6a952/resourceGroups/rg-synapse-getting-started/providers/Microsoft.Synapse/workspaces/ws-synapse-getting-started/bigDataPools/sparkpool",
+				"name": "sparkpool",
+				"type": "Spark",
+				"endpoint": "https://ws-synapse-getting-started.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkpool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"# Set arguments\n",
+					"dfDataOriginalPath = \"/bronze/\"\n",
+					"dfDataChangedPath = \"/silver/\"\n",
+					"cw_database = \"demodatabase\"\n",
+					"cw_table = \"SalesLT.Address\""
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\n",
+					"\n",
+					"from pyspark import *\n",
+					"from pyspark.sql.window import Window\n",
+					"from pyspark.sql.functions import *\n",
+					"from pyspark.sql import Row\n",
+					"from pyspark.sql.types import StructType, StructField, IntegerType, StringType, TimestampType, BooleanType, DateType\n",
+					"from typing import List\n",
+					"from datetime import datetime\n",
+					"\n",
+					"print(\"Database: \" + cw_database)\n",
+					"print(\"Table: \" + cw_table)\n",
+					"\n",
+					"# Read CSV data from landing zone location\n",
+					"dataChanged = spark.read.load('abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net/' + dfDataOriginalPath + cw_database + '/' + cw_table + '.parquet', format='parquet', header=True)\n",
+					"dataChanged.printSchema()\n",
+					"dataChanged.show()"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\n",
+					"\n",
+					"from datetime import date\n",
+					"current_date = datetime.today().date()\n",
+					"\n",
+					"from notebookutils import mssparkutils\n",
+					"\n",
+					"try:\n",
+					"    # Read original data - this is your scd type 2 table holding all data\n",
+					"    dataOriginal = spark.read.load('abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net/' + dfDataChangedPath + \"/\" + cw_database + \"/\" + cw_table, format='delta')\n",
+					"except:\n",
+					"    # Use first load when no data exists yet\n",
+					"    newOriginalData = dataChanged.withColumn('current', lit(True)).withColumn('effectiveDate', lit(current_date)).withColumn('endDate', lit(date(9999, 12, 31)))\n",
+					"    newOriginalData.write.format(\"delta\").mode(\"overwrite\").save('abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net/' + dfDataChangedPath + \"/\" + cw_database + \"/\" + cw_table)\n",
+					"    newOriginalData.show()\n",
+					"    newOriginalData.printSchema()\n",
+					"    mssparkutils.notebook.exit(\"Done loading data! Newly loaded data will be used to generate original data.\")"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"if cw_table == \"SalesLT.Address\":\n",
+					"    primaryKey = \"AddressID\"\n",
+					"elif cw_table == \"SalesLT.Customer\":\n",
+					"    primaryKey = \"CustomerID\"\n",
+					"else:\n",
+					"    mssparkutils.notebook.exit(\"Exit! No primary key defined!\")"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Prepare for merge, rename columns of newly loaded data, append 'src_'\n",
+					"from pyspark.sql import functions as F\n",
+					"\n",
+					"# Capture column names of incoming dataset\n",
+					"columnNames = dataChanged.schema.names\n",
+					"\n",
+					"# Rename all columns in dataChanged, prepend src_, and add additional columns\n",
+					"df_new = dataChanged.select([F.col(c).alias(\"src_\"+c) for c in dataChanged.columns])\n",
+					"src_columnNames = df_new.schema.names\n",
+					"df_new2 = df_new.withColumn('src_current', lit(True)).withColumn('src_effectiveDate', lit(current_date)).withColumn('src_endDate', lit(date(9999, 12, 31)))\n",
+					"df_new2.printSchema()\n",
+					"\n",
+					"import hashlib\n",
+					"\n",
+					"# Create dynamic columns\n",
+					"src_primaryKey = 'src_' + primaryKey\n",
+					"\n",
+					"# FULL Merge, join on key column and also high date column to make only join to the latest records\n",
+					"df_merge = dataOriginal.join(df_new2, (df_new2[src_primaryKey] == dataOriginal[primaryKey]), how='fullouter')\n",
+					"\n",
+					"# Derive new column to indicate the action\n",
+					"df_merge = df_merge.withColumn('action',\n",
+					"    when(md5(concat_ws('+', *columnNames)) == md5(concat_ws('+', *src_columnNames)), 'NOACTION')\n",
+					"    .when(df_merge.current == False, 'NOACTION')\n",
+					"    .when(df_merge[src_primaryKey].isNull() & df_merge.current, 'DELETE')\n",
+					"    .when(df_merge[src_primaryKey].isNull(), 'INSERT')\n",
+					"    .otherwise('UPDATE')\n",
+					")\n",
+					"\n",
+					"df_merge.show()\n",
+					"\n",
+					"# Generate target selections based on action codes\n",
+					"column_names = columnNames + ['current', 'effectiveDate', 'endDate']\n",
+					"src_column_names = src_columnNames + ['src_current', 'src_effectiveDate', 'src_endDate']\n",
+					"\n",
+					"# Generate target selections based on action codes\n",
+					"column_names = columnNames + ['current', 'effectiveDate', 'endDate']\n",
+					"src_column_names = src_columnNames + ['src_current', 'src_effectiveDate', 'src_endDate']\n",
+					"\n",
+					"# For records that needs no action\n",
+					"df_merge_p1 = df_merge.filter(df_merge.action == 'NOACTION').select(column_names)\n",
+					"\n",
+					"# For records that needs insert only\n",
+					"df_merge_p2 = df_merge.filter(df_merge.action == 'INSERT').select(src_column_names)\n",
+					"df_merge_p2_1 = df_merge_p2.select([F.col(c).alias(c.replace(c[0:4], \"\")) for c in df_merge_p2.columns])\n",
+					"\n",
+					"# For records that needs to be deleted\n",
+					"df_merge_p3 = df_merge.filter(df_merge.action == 'DELETE').select(column_names).withColumn('current', lit(False)).withColumn('endDate', lit(current_date))\n",
+					"\n",
+					"# For records that needs to be expired and then inserted\n",
+					"df_merge_p4_1 = df_merge.filter(df_merge.action == 'UPDATE').select(src_column_names)\n",
+					"df_merge_p4_2 = df_merge_p4_1.select([F.col(c).alias(c.replace(c[0:4], \"\")) for c in df_merge_p2.columns])\n",
+					"\n",
+					"# Replace src_ alias in all columns\n",
+					"df_merge_p4_3 = df_merge.filter(df_merge.action == 'UPDATE').withColumn('endDate', date_sub(df_merge.src_effectiveDate, 1)).withColumn('current', lit(False)).select(column_names)\n",
+					"\n",
+					"# Union all records together\n",
+					"df_merge_final = df_merge_p1.unionAll(df_merge_p2).unionAll(df_merge_p3).unionAll(df_merge_p4_2).unionAll(df_merge_p4_3)\n",
+					"\n",
+					"df_merge_final.show()\n",
+					"\n",
+					"# At last, you can overwrite existing data using this new data frame\n",
+					"df_merge_final.write.format(\"delta\").mode(\"overwrite\").save('abfss://fsadlssynapsegs@accadlssynapsegs.dfs.core.windows.net/' + dfDataChangedPath + \"/\" + cw_database + \"/\" + cw_table)"
+				],
+				"execution_count": 8
+			}
+		]
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "PurviewCleanUpDedicated",
+	"properties": {
+		"content": {
+			"query": "-- Dropping the changes made to deploy purview in the dedicated pool\n\nEXEC sp_droprolemember 'db_datareader', [acc-purview-synapse-gs];\nGO\nDROP USER [acc-purview-synapse-gs];\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dedicated01",
+				"poolName": "dedicated01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

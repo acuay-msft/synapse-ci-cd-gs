@@ -1,0 +1,17 @@
+{
+	"name": "SQL Read External Table",
+	"properties": {
+		"content": {
+			"query": "SELECT TOP (100) [CustomerId]\n,[Title]\n,[FirstName]\n,[MiddleName]\n,[LastName]\n,[Suffix]\n,[AddressType]\n,[AddressLine1]\n,[AddressLine2]\n,[City]\n,[StateProvince]\n,[CountryRegion]\n,[PostalCode]\n FROM [dbo].[CustomerAddresses]",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "customers",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

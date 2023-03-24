@@ -1,0 +1,17 @@
+{
+	"name": "dpCreateTable",
+	"properties": {
+		"content": {
+			"query": "-- Adding a simple comment to have something to commit\nCREATE TABLE [dbo].[CustomerAddresses] (\n    [CustomerId]    INT             NOT NULL,\n    [Title]         VARCHAR(50)     NULL,\n    [FirstName]     VARCHAR(1024)   NULL,\n    [MiddleName]    VARCHAR(1024)   NULL,\n    [LastName]      VARCHAR(1024)   NULL,\n    [Suffix]        VARCHAR(30)     NULL,\n    [AddressType]   VARCHAR(50)     NULL,\n    [AddressLine1]  VARCHAR(1024)   NULL,\n    [AddressLine2]  VARCHAR(1024)   NULL,\n    [City]          VARCHAR(1024)   NULL,\n    [StateProvince] VARCHAR(1024)     NULL,\n    [CountryRegion] VARCHAR(1024)     NULL,\n    [PostalCode]    VARCHAR(50)     NULL    \n)\nWITH (CLUSTERED COLUMNSTORE INDEX, DISTRIBUTION = HASH([CustomerId]));",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dedicated01",
+				"poolName": "dedicated01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"name": "ParquetDataSet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{item().Table_Name}.parquet",
+					"type": "Expression"
+				},
+				"folderPath": "bronze/demodatabase",
+				"fileSystem": "fsadlssynapsegs"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}
