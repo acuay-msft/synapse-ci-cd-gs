@@ -1,0 +1,17 @@
+{
+	"name": "AzureMLServiceMaster",
+	"properties": {
+		"annotations": [],
+		"type": "AzureMLService",
+		"typeProperties": {
+			"subscriptionId": "3ecde8ef-af2a-4fd8-95a2-cb3d3eb6a952",
+			"resourceGroupName": "rg_ws_amls_master",
+			"mlWorkspaceName": "ws_amls_master",
+			"authentication": "MSI"
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
